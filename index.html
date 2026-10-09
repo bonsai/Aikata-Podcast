@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podcast Agent — Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      display: flex;
+      min-height: 100vh;
+    }
+    nav {
+      width: 240px;
+      background: #161b22;
+      border-right: 1px solid #30363d;
+      padding: 20px 0;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    nav h1 {
+      font-size: 16px;
+      padding: 0 20px 16px;
+      border-bottom: 1px solid #30363d;
+      margin-bottom: 12px;
+      color: #58a6ff;
+    }
+    nav h1 a { color: #58a6ff; text-decoration: none; }
+    nav button {
+      display: block;
+      width: calc(100% - 24px);
+      margin: 4px 12px;
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    nav button:hover { background: #21262d; }
+    nav button.active { background: #1f6feb; color: #fff; }
+    nav .divider {
+      height: 1px;
+      background: #30363d;
+      margin: 12px 20px;
+    }
+    main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 32px 40px;
+      max-width: 960px;
+    }
+    main h1 { font-size: 28px; margin-bottom: 8px; color: #e6edf3; }
+    main h2 { font-size: 22px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #30363d; color: #e6edf3; }
+    main h3 { font-size: 18px; margin: 24px 0 10px; color: #e6edf3; }
+    main h4 { font-size: 15px; margin: 18px 0 8px; color: #c9d1d9; }
+    main p { margin: 10px 0; line-height: 1.7; }
+    main ul, main ol { margin: 10px 0 10px 24px; line-height: 1.7; }
+    main li { margin: 4px 0; }
+    main a { color: #58a6ff; text-decoration: none; }
+    main a:hover { text-decoration: underline; }
+    main table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    main th, main td {
+      border: 1px solid #30363d;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    main th { background: #161b22; font-weight: 600; color: #e6edf3; }
+    main tr:nth-child(even) { background: #161b22; }
+    main code {
+      background: #161b22;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      color: #ff7b72;
+    }
+    main pre {
+      background: #161b22;
+      padding: 14px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    main pre code { background: transparent; padding: 0; color: #c9d1d9; }
+    main blockquote {
+      border-left: 4px solid #30363d;
+      padding-left: 16px;
+      margin: 12px 0;
+      color: #8b949e;
+    }
+    main hr { border: none; border-top: 1px solid #30363d; margin: 24px 0; }
+    .loading { color: #8b949e; font-style: italic; }
+    .error { color: #f85149; }
+    @media (max-width: 800px) {
+      nav { width: 100%; position: static; height: auto; border-right: none; border-bottom: 1px solid #30363d; }
+      body { flex-direction: column; }
+      main { margin-left: 0; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1><a href="./index.html">🎙 Podcast Agent</a></h1>
+    <button data-src="./docs/MRD.md" class="active">MRD</button>
+    <button data-src="./docs/kanban.md">カンバン</button>
+    <button data-src="./docs/ROADMAP.md">ロードマップ</button>
+    <button data-src="./docs/TASKS.md">スケジュール</button>
+    <div class="divider"></div>
+    <button data-src="./docs/PRD.md">PRD</button>
+    <button data-src="./docs/MVP.md">MVP</button>
+    <button data-src="./docs/POC.md">POC</button>
+    <button data-src="./docs/COST-ESTIMATE.md">コスト見積</button>
+    <button data-src="./docs/CONTEXT.md">CONTEXT</button>
+    <button data-src="./docs/CLAUDE.md">CLAUDE</button>
+  </nav>
+  <main id="content">
+    <p class="loading">読み込み中…</p>
+  </main>
+
+  <script>
+    const content = document.getElementById('content');
+    const buttons = document.querySelectorAll('nav button');
+
+    async function loadMd(src, btn) {
+      buttons.forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      content.innerHTML = '<p class="loading">読み込み中…</p>';
+      try {
+        const res = await fetch(src);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const md = await res.text();
+        content.innerHTML = marked.parse(md);
+      } catch (e) {
+        content.innerHTML = `<p class="error">読み込み失敗: ${e.message}</p>`;
+      }
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => loadMd(btn.dataset.src, btn));
+    });
+
+    // Load first tab
+    loadMd('./docs/MRD.md', buttons[0]);
+  </script>
+</body>
+</html>
