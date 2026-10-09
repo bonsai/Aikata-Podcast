@@ -110,7 +110,7 @@ const server = createServer(async (req, res) => {
   return send(res, 404, { error: "Not found" });
 });
 
-server.listen(port, () => {
-  console.log(`Podcast Agent listening on http://localhost:${port}`);
+server.listen(port, config.app.host, () => {
+  console.log(`${config.app.name} listening on http://${config.app.host}:${port}`);
   console.log("Private browser storage is enabled; external publishing is not configured.");
 });
