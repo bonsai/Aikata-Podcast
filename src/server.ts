@@ -96,7 +96,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === "GET") {
-    const pathname = url.pathname === "/" ? "/studio.html" : decodeURIComponent(url.pathname);
+    const pathname = ["/", "/ui", "/ui/"].includes(url.pathname) ? "/src/ui/index.html" : decodeURIComponent(url.pathname);
     const filePath = resolve(root, "." + pathname);
     if (!filePath.startsWith(root)) return send(res, 403, { error: "Forbidden" });
     try {
