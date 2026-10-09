@@ -2,6 +2,13 @@
 
 AIホストと人間の対話から、3分番組を企画・収録・編集し、音声ファイルとして書き出すWebアプリ。
 
+## 開発ナビゲーション
+
+- [Kanbanボード](./kanban/README.md) — Backlog / Ready / In Progress / Review / Done
+- [Stage・Tier・Phase計画](./plan/README.md) — 開発ゲートとステージ別成果物
+- [タスク一覧](./TASKS.md) — T01〜T15の実装チェックリスト
+- [決定事項・データモデル](./CONTEXT.md)
+
 ## MVPのゴール
 
 **テーマを決める → AIホストの台本を作る → AI音声と人間のマイク音声を収録する → 音声を確認・編集する → 完成音声をダウンロードする。**
