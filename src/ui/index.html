@@ -304,9 +304,8 @@ fetch('/api/health').then(r=>r.json()).then(d=>{$('#healthBadge').textContent=d.
         const ask = document.querySelector('#askBtn');
         ask?.click();
         greeted = true;
-        next.textContent = '企画会議へ進む';
-        return;
       }
+      // The app advances automatically; do not make the user press the same CTA twice.
       document.querySelector('#toPlanning')?.click();
     } else if (stage === 'planning') {
       document.querySelector('[data-goto="recording"]')?.click();
