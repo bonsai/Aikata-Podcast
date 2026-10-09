@@ -276,7 +276,7 @@ fetch('/api/health').then(r=>r.json()).then(d=>{$('#healthBadge').textContent=d.
   next.id = 'simpleNext';
   next.type = 'button';
   next.textContent = '相方と話す';
-  document.querySelector('#stage-memo').append(next);
+  document.querySelector('.layout main').append(next);
   const titles = {
     memo: ['相方と話す', 'メモを受け取りました。次は企画会議です。'],
     planning: ['収録へ進む', '収録を始めましょう。'],
