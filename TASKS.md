@@ -1,6 +1,8 @@
 # TASKS.md — Podcast Agent MVP
 
 > 原則：一度にひとつ。最初に動く縦切りを作り、必要な機能だけ積み上げる。
+>
+> 開発ゲートと分類: [Stage / Tier / Phase計画](./plan/README.md) · 作業状態: [Kanban](./kanban/README.md)
 
 ## 現在のフォーカス
 
