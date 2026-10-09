@@ -286,7 +286,8 @@ fetch('/api/health').then(r=>r.json()).then(d=>{$('#healthBadge').textContent=d.
   };
   let greeted = false;
   function refresh() {
-    next.textContent = titles[window.__aikataStage || 'memo'][0];
+    const stage = document.querySelector('.stage:not(.hidden)')?.id?.replace('stage-','') || 'memo';
+    next.textContent = titles[stage][0];
     next.disabled = false;
   }
   const originalSetStage = window.setStage;
