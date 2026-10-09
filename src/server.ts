@@ -2,8 +2,12 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import { mastra } from "./mastra/index.ts";
+import { getSecret, loadConfig } from "./config.ts";
+import { transcribeAudio } from "./speech/deepgram.ts";
 
-const port = Number(process.env.PORT || 8787);
+const config = await loadConfig();
+
+const port = config.app.port;
 const root = process.cwd();
 const mime: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -36,16 +40,17 @@ const server = createServer(async (req, res) => {
   if (req.method === "GET" && url.pathname === "/api/health") {
     return send(res, 200, {
       ok: true,
-      workersAIConfigured: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN),
-      workersAIModel: process.env.WORKERS_AI_MODEL || "@cf/google/gemma-4-26b-a4b-it",
-      deepgramConfigured: Boolean(process.env.DEEPGRAM_API_KEY),
+      workersAIConfigured: Boolean(getSecret(config, "llm.account_id_env") && getSecret(config, "llm.api_token_env")),
+      workersAIModel: config.llm.model,
+      deepgramConfigured: Boolean(getSecret(config, "speech.api_key_env")),
+      deepgramModel: config.speech.model,
       storage: "browser-local",
     });
   }
 
   if (req.method === "POST" && url.pathname === "/api/assistant") {
-    if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_API_TOKEN) {
-      return send(res, 503, { error: "Workers AI is not configured. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN." });
+    if (!getSecret(config, "llm.account_id_env") || !getSecret(config, "llm.api_token_env")) {
+      return send(res, 503, { error: `Workers AI is not configured. Set ${config.llm.account_id_env} and ${config.llm.api_token_env}.` });
     }
     try {
       const body = JSON.parse((await readBody(req, 256 * 1024)).toString("utf8")) as {
@@ -75,32 +80,14 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url.pathname === "/api/transcribe") {
-    if (!process.env.DEEPGRAM_API_KEY) {
-      return send(res, 503, { error: "DEEPGRAM_API_KEY is not configured" });
+    if (!getSecret(config, "speech.api_key_env")) {
+      return send(res, 503, { error: `${config.speech.api_key_env} is not configured` });
     }
     try {
       const audio = await readBody(req);
       if (!audio.length) return send(res, 400, { error: "Audio body is empty" });
       const contentType = String(req.headers["content-type"] || "audio/webm").split(";")[0];
-      const endpoint = new URL("https://api.deepgram.com/v1/listen");
-      endpoint.searchParams.set("model", process.env.DEEPGRAM_MODEL || "nova-3");
-      endpoint.searchParams.set("language", "ja");
-      endpoint.searchParams.set("smart_format", "true");
-      endpoint.searchParams.set("punctuate", "true");
-      const dg = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
-          "Content-Type": contentType,
-        },
-        body: new Uint8Array(audio),
-      });
-      const data = await dg.json() as {
-        err_msg?: string;
-        results?: { channels?: Array<{ alternatives?: Array<{ transcript?: string }> }> };
-      };
-      if (!dg.ok) return send(res, dg.status, { error: data.err_msg || "Deepgram transcription failed" });
-      const transcript = data.results?.channels?.[0]?.alternatives?.[0]?.transcript || "";
+      const transcript = await transcribeAudio(audio, contentType, { config });
       return send(res, 200, { transcript });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
