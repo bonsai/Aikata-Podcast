@@ -1,0 +1,27 @@
+# Aikata Podcast runtime configuration.
+# Secret values stay in environment variables; this file only names their keys.
+app:
+  name: Aikata Podcast
+  host: 127.0.0.1
+  port: 8787
+
+llm:
+  provider: cloudflare-workers-ai
+  model: "@cf/google/gemma-4-26b-a4b-it"
+  account_id_env: CLOUDFLARE_ACCOUNT_ID
+  api_token_env: CLOUDFLARE_API_TOKEN
+  max_output_tokens: 900
+  temperature: 0.7
+
+speech:
+  provider: deepgram
+  api_key_env: DEEPGRAM_API_KEY
+  model: nova-3
+  language: ja
+  smart_format: true
+  punctuate: true
+
+privacy:
+  storage: browser-local
+  publish_by_default: false
+  send_audio_to_deepgram_only_on_transcribe: true
