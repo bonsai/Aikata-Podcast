@@ -1,49 +1,36 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_WORKERS_AI_MODEL, workersAIChat } from "../src/llm/workers-ai.ts";
+import { loadConfig } from "../src/config.ts";
+import { workersAIChat } from "../src/llm/workers-ai.ts";
 
 afterEach(() => vi.unstubAllEnvs());
 
 describe("workersAIChat", () => {
-  it("sends chat messages to Cloudflare Workers AI and returns the answer", async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
-      success: true,
-      choices: [{ message: { content: "  いいですね。  " } }],
-    }), { status: 200, headers: { "content-type": "application/json" } }));
+  it("uses the SDK with model and generation settings from YAML", async () => {
+    const config = await loadConfig();
+    vi.stubEnv(config.llm.account_id_env, "test-account");
+    vi.stubEnv(config.llm.api_token_env, "test-token");
+    const generateTextImpl = vi.fn().mockResolvedValue({ text: "  いいですね。  " });
 
     await expect(workersAIChat([{ role: "user", content: "こんにちは" }], {
-      accountId: "account-id",
-      apiToken: "secret-token",
-      fetcher,
+      config,
+      generateTextImpl,
     })).resolves.toBe("いいですね。");
 
-    expect(fetcher).toHaveBeenCalledOnce();
-    const [url, init] = fetcher.mock.calls[0];
-    expect(String(url)).toBe("https://api.cloudflare.com/client/v4/accounts/account-id/ai/v1/chat/completions");
-    expect(new Headers(init?.headers).get("authorization")).toBe("Bearer secret-token");
-    expect(JSON.parse(String(init?.body))).toMatchObject({
-      model: DEFAULT_WORKERS_AI_MODEL,
+    expect(generateTextImpl).toHaveBeenCalledOnce();
+    expect(generateTextImpl).toHaveBeenCalledWith(expect.objectContaining({
       messages: [{ role: "user", content: "こんにちは" }],
-    });
+      maxOutputTokens: config.llm.max_output_tokens,
+      temperature: config.llm.temperature,
+    }));
   });
 
-  it("fails clearly when credentials are missing", async () => {
+  it("fails clearly when SDK credentials are missing", async () => {
+    const config = await loadConfig();
+    vi.stubEnv(config.llm.account_id_env, "");
+    vi.stubEnv(config.llm.api_token_env, "");
     await expect(workersAIChat([{ role: "user", content: "test" }], {
-      accountId: "",
-      apiToken: "",
-      fetcher: vi.fn<typeof fetch>(),
-    })).rejects.toThrow("CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN");
-  });
-
-  it("surfaces Cloudflare API errors without exposing the token", async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
-      success: false,
-      errors: [{ message: "Invalid account ID" }],
-    }), { status: 400, headers: { "content-type": "application/json" } }));
-
-    await expect(workersAIChat([{ role: "user", content: "test" }], {
-      accountId: "account-id",
-      apiToken: "do-not-leak",
-      fetcher,
-    })).rejects.toThrow("Cloudflare Workers AI request failed: Invalid account ID");
+      config,
+      generateTextImpl: vi.fn(),
+    })).rejects.toThrow(config.llm.account_id_env + " and " + config.llm.api_token_env);
   });
 });
