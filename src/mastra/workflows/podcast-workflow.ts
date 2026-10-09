@@ -1,6 +1,9 @@
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
+import { loadConfig } from "../../config.ts";
 import { workersAIChat } from "../../llm/workers-ai.ts";
+
+const config = await loadConfig();
 
 const systemPrompt = `あなたは日本語の音声番組づくりを手伝う、気の利く漫才の相方兼編集者です。
 ユーザーが話したメモや感想を尊重し、短い質問、軽いツッコミ、具体例を促す問いで考えを深めます。
@@ -27,7 +30,7 @@ const conversationStep = createStep({
           ? "収録を支援する短い返答をしてください。"
           : inputData.action === "library"
             ? "保存したメモや番組を振り返る相方として短く返答してください。"
-            : "メモを整理し、ユーザーが次に進みやすいよう短く返答してください。";
+            : "メモを整理し、ユーザーが次に進みやすいよう短く返答してください.";
 
     const reply = await workersAIChat([
       { role: "system", content: systemPrompt },
@@ -41,7 +44,7 @@ const conversationStep = createStep({
           "今回の発話:\n" + inputData.message,
         ].join("\n\n"),
       },
-    ]);
+    ], { config });
     return { reply, action: inputData.action };
   },
 });
