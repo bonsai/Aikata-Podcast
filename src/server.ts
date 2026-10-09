@@ -36,13 +36,17 @@ const server = createServer(async (req, res) => {
   if (req.method === "GET" && url.pathname === "/api/health") {
     return send(res, 200, {
       ok: true,
-      mastraConfigured: Boolean(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.GOOGLE_API_KEY),
+      workersAIConfigured: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN),
+      workersAIModel: process.env.WORKERS_AI_MODEL || "@cf/google/gemma-4-26b-a4b-it",
       deepgramConfigured: Boolean(process.env.DEEPGRAM_API_KEY),
       storage: "browser-local",
     });
   }
 
   if (req.method === "POST" && url.pathname === "/api/assistant") {
+    if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_API_TOKEN) {
+      return send(res, 503, { error: "Workers AI is not configured. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN." });
+    }
     try {
       const body = JSON.parse((await readBody(req, 256 * 1024)).toString("utf8")) as {
         action?: string; memo?: string; message?: string; history?: string;
