@@ -142,6 +142,37 @@ audio{display:block;max-width:100%}
 }
 
 
+
+/* Aikata minimal voice-first UI: one task and one next action at a time. */
+.tabs,.steps,.side,#editor,#dev,.footer,.eyebrow,.hero p,.hero>.btn,
+#stage-memo .lead,#stage-planning .lead,#stage-recording .lead,#stage-review .lead,#stage-library .lead,
+#stage-memo .label,#stage-planning .label,#stage-memo #talks,#stage-memo #message,
+#stage-memo #sendBtn,#stage-memo #outlineBtn,#stage-memo #toPlanning,
+#stage-planning #planningSend,#stage-planning [data-goto],
+#stage-recording .callout,#stage-recording #transcribeBtn,#stage-recording [data-goto],
+#stage-review #saveReview,#stage-review [data-goto],#stage-library #exportBtn {display:none!important}
+.app{max-width:680px;padding:16px}
+.top{justify-content:center;margin:4px 0 20px}
+.topright{display:none}
+.brand{font-size:21px}
+.hero{padding:8px 0 16px;display:block}
+h1{font-size:clamp(26px,6vw,34px);margin:0 0 8px}
+.layout{display:block}
+.panel{padding:18px;border-radius:18px}
+.stage h2{font-size:18px;margin:0 0 14px}
+.field{width:100%;font-size:17px;border-radius:14px;padding:15px}
+textarea.field{min-height:180px}
+.voice{margin:14px 0;padding:14px;border-radius:16px}
+.mic{width:58px;height:58px;min-width:58px;font-size:22px}
+#simpleNext{width:100%;min-height:52px;border:0;border-radius:14px;background:var(--accent);color:#fff;font-size:16px;font-weight:800;margin-top:12px}
+#simpleNext:disabled{opacity:.5}
+#stage-planning #planningTalks{max-height:38vh;margin:0 0 12px}
+#stage-recording #takes audio{margin:12px 0}
+#stage-library #libraryItems{margin:8px 0}
+#stage-library #exportBtn{display:block!important}
+.status{font-size:13px;line-height:1.5}
+@media(max-width:600px){.app{padding:12px 12px calc(18px + env(safe-area-inset-bottom))}.top{margin-bottom:14px}.panel{padding:15px}textarea.field{min-height:34vh;max-height:48vh}.voice{padding:12px}#simpleNext{position:sticky;bottom:8px;box-shadow:0 4px 18px #0002}}
+
 </style>
 </head>
 <body>
@@ -236,6 +267,65 @@ $('#healthBtn').addEventListener('click',async()=>{setStatus('#devHealth','確�
 $('#copyArchitecture').addEventListener('click',async()=>{const t=$('#copyArchitecture').parentElement.querySelector('.code').textContent;try{await navigator.clipboard.writeText(t);setStatus('#copyStatus','コピーしました。')}catch{setStatus('#copyStatus','ブラウザがコピーを許可しませんでした。')}});
 $('#editorMemo').value=session.memo;$('#editorTranscript').value=session.transcript;$('#devNotes').value=localStorage.getItem(LOG)||'';
 fetch('/api/health').then(r=>r.json()).then(d=>{$('#healthBadge').textContent=d.ok?'API 応答あり':'API 異常'}).catch(()=>{$('#healthBadge').textContent='API 未接続'});
+</script>
+
+<script>
+(() => {
+  const main = document.querySelector('#stage-memo');
+  const next = document.createElement('button');
+  next.id = 'simpleNext';
+  next.type = 'button';
+  next.textContent = '相方と話す';
+  document.querySelector('#stage-memo').append(next);
+  const titles = {
+    memo: ['相方と話す', 'メモを受け取りました。次は企画会議です。'],
+    planning: ['収録へ進む', '収録を始めましょう。'],
+    recording: ['聞き返して編集', '録音を聞き返して、残す内容を整えましょう。'],
+    review: ['保存して終わる', '保存しました。必要なときに聞き返せます。'],
+    library: ['最初に戻る', '新しいメモを始めましょう。']
+  };
+  let greeted = false;
+  function refresh() {
+    next.textContent = titles[window.__aikataStage || 'memo'][0];
+    next.disabled = false;
+  }
+  const originalSetStage = window.setStage;
+  next.addEventListener('click', async () => {
+    const stage = document.querySelector('.stage:not(.hidden)')?.id?.replace('stage-','') || 'memo';
+    if (stage === 'memo') {
+      const memo = document.querySelector('#memo').value.trim();
+      if (!memo) {
+        document.querySelector('#memo').focus();
+        document.querySelector('#memoStatus').textContent = 'まず、ひとことメモするか、マイクで声を残してください。';
+        return;
+      }
+      if (!greeted) {
+        const ask = document.querySelector('#askBtn');
+        ask?.click();
+        greeted = true;
+        next.textContent = '企画会議へ進む';
+        return;
+      }
+      document.querySelector('#toPlanning')?.click();
+    } else if (stage === 'planning') {
+      document.querySelector('[data-goto="recording"]')?.click();
+    } else if (stage === 'recording') {
+      document.querySelector('[data-goto="review"]')?.click();
+    } else if (stage === 'review') {
+      document.querySelector('#saveReview')?.click();
+      document.querySelector('[data-goto="library"]')?.click();
+    } else {
+      document.querySelector('#newSession')?.click();
+      greeted = false;
+    }
+    setTimeout(refresh, 0);
+  });
+  document.querySelectorAll('.step').forEach(el => el.addEventListener('click', refresh));
+  document.querySelectorAll('[data-goto],#toPlanning').forEach(el => el.addEventListener('click', () => setTimeout(refresh, 0)));
+  const observer = new MutationObserver(refresh);
+  document.querySelectorAll('.stage').forEach(el => observer.observe(el,{attributes:true,attributeFilter:['class']}));
+  refresh();
+})();
 </script>
 </body>
 </html>
