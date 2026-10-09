@@ -4,6 +4,8 @@ AIホストと人間の対話から、3分番組を企画・収録・編集し�
 
 ## 開発ナビゲーション
 
+- [製品・事業ドキュメント](./docs/README.md) — MRD / PRD / KPI / Roadmap / MVP / POC / Monetization / AI-DLC
+
 - [Kanbanボード](./kanban/README.md) — Backlog / Ready / In Progress / Review / Done
 - [Stage・Tier・Phase計画](./plan/README.md) — 開発ゲートとステージ別成果物
 - [タスク一覧](./TASKS.md) — T01〜T15の実装チェックリスト
