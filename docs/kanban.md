@@ -1,58 +1,24 @@
 # Aikata Podcast — Kanban
 
-> 個人利用を第一にした、声で進める企画・収録エージェント。公開配信は必須にせず、本人が後から聞き返せることをMVPの中心に置く。
-
 最終更新: 2026-10-09
 
-## 目的 / MVP
+## Done
+- [x] Cloudflare Workers AIをLLMプロバイダーにする
+- [x] 設定を `config/aikata.yaml` に集約し、Zodで検証
+- [x] Workers AI SDK（`workers-ai-provider` + `ai`）へ移行
+- [x] Deepgram公式SDK（`@deepgram/sdk`）へ移行
+- [x] APIキーはYAMLに直書きせず、環境変数名をYAMLで指定
+- [x] SDKアダプターのモックテストを追加
 
-- [ ] 音声だけで「シタガキメモ → 企画会議 → 収録」を段階的に進める
-- [ ] 音声で開始・終了・次のステップへの遷移を操作する
-- [x] LLMはCloudflare Workers AI、処理フローはMastra Workflowに分離する
-- [ ] Deepgramによる日本語音声認識と、必要に応じた音声入出力を整える
-- [ ] 録音、文字起こし、要約、ステップ情報を保存し、後から本人だけが再生・検索できる
-- [x] 公開配信・共有リンクはMVPの対象外
+## In Progress
+- [ ] npm install / TypeScript / Vitest の実行結果を確認
+- [ ] SDKとMastra Workflowの結合テスト
+- [ ] Deepgramのリアルタイム音声対話/TTS
+- [ ] 音声だけで工程を進めるUIの仕上げ
 
-## Kanban
+## Config
+- YAML: `config/aikata.yaml`
+- Secrets: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `DEEPGRAM_API_KEY`
+- Optional config path: `AIKATA_CONFIG`
 
-### Backlog
-- [ ] Deepgramのリアルタイム音声対話/TTSを導入するか評価する
-- [ ] 音声データの保持期間、削除、バックアップ方針
-- [ ] 個人用アクセス認証とログに音声本文を残さない設計
-- [ ] 公開配信は後回し。RSS、共有リンクは別スコープ
-
-### Ready
-- [ ] API境界 — 録音、文字起こし、次ステップ判断、保存、再生
-- [ ] 失敗時の体験 — STT失敗、通信断、録音中断、再試行、未保存警告
-- [ ] Vitest CIの実行結果を確認
-
-### In Progress
-- [x] Cloudflare Workers AI用のサーバー側Chat Completionsアダプター
-- [x] Mastra WorkflowからWorkers AIを呼び出す
-- [x] .env.example、ヘルスチェック、UI説明をWorkers AI構成へ更新
-- [ ] cloneからdry-testまでの手順を実行確認
-- [ ] 音声UIと状態機械を接続する
-
-### Review / Test
-- [x] Workers AIアダプターのモックテストを追加
-- [ ] `npm test` と TypeScriptチェックを実行確認
-- [ ] STTアダプターのmock-test
-- [ ] データ永続化テスト — 再読込、音声再生、削除
-- [ ] プライバシー確認 — 未認証アクセスから個人データを保護
-
-### Done
-- [x] Vitestの実行スクリプトとカバレッジ設定を追加
-- [x] メモ → 企画 → 収録 → 振り返り → アーカイブの純粋な状態遷移関数を追加
-- [x] 状態遷移の正常系・戻る操作・禁止遷移のテストを作成
-
-> テストコードを追加しただけでは合格扱いにしない。GitHub Actionsまたはローカルでの実行結果を確認すること。
-
-## 受け入れ条件
-
-1. 音声操作でメモ・企画・収録のステップを進められる。
-2. ステップ状態とタイムスタンプが保存され、再開できる。
-3. 録音と文字起こしを本人が後から参照できる。
-4. 公開設定をしない限り、第三者に音声・文字起こしが公開されない。
-5. API障害や通信断、未保存状態がユーザーに分かる。
-6. APIキーなしでもモックを使ったdry-testが通る。
-7. `npm test` で状態遷移とWorkers AIアダプターのテストを再現できる。
+> コードを追加しただけではテスト合格扱いにしない。CIまたはローカルの実行結果を確認する。
