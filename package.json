@@ -13,8 +13,8 @@
   "dependencies": {
     "@deepgram/sdk": "^5.14.0",
     "@mastra/core": "^1.0.0",
-    "ai": "^5.0.0",
-    "workers-ai-provider": "^2.0.0",
+    "ai": "^7.0.0",
+    "workers-ai-provider": "^4.0.0",
     "yaml": "^2.8.1",
     "zod": "^4.0.0"
   },
