@@ -102,6 +102,46 @@ audio{display:block;max-width:100%}
   button:hover,.btn:hover{filter:none}
 }
 
+/* Semantic color system: color communicates the kind of action, not decoration. */
+:root{
+  --c-record:#c84f49;--c-record-soft:#fff0ee;--c-record-line:#efc2bd;
+  --c-plan:#7956b5;--c-plan-soft:#f3edfc;--c-plan-line:#d9c9f0;
+  --c-edit:#376f9f;--c-edit-soft:#eaf3fb;--c-edit-line:#bfd8ed;
+  --c-save:#357a58;--c-save-soft:#e9f5ed;--c-save-line:#bfdfca;
+  --c-neutral:#6f7069;--c-neutral-soft:#f0efe9;
+}
+/* Workflow steps: memo / planning / recording / editing / library */
+.step[data-step="memo"]{--step-color:var(--accent);--step-soft:var(--soft);--step-line:#cbd6c4}
+.step[data-step="planning"]{--step-color:var(--c-plan);--step-soft:var(--c-plan-soft);--step-line:var(--c-plan-line)}
+.step[data-step="recording"]{--step-color:var(--c-record);--step-soft:var(--c-record-soft);--step-line:var(--c-record-line)}
+.step[data-step="review"]{--step-color:var(--c-edit);--step-soft:var(--c-edit-soft);--step-line:var(--c-edit-line)}
+.step[data-step="library"]{--step-color:var(--c-save);--step-soft:var(--c-save-soft);--step-line:var(--c-save-line)}
+.step.active{background:var(--step-soft);border-color:var(--step-line);color:var(--step-color);box-shadow:inset 3px 0 0 var(--step-color)}
+.step[data-step]:not(.active):hover{background:var(--step-soft);border-color:var(--step-line);color:var(--step-color)}
+/* Buttons inherit the meaning of their destination/action. */
+#recordBtn,#takeBtn{background:var(--c-record);color:#fff}
+#recordBtn.recording,#takeBtn.recording{background:#8f2925;box-shadow:0 0 0 4px var(--c-record-soft)}
+#toPlanning,#planningSend,[data-goto="recording"]{border-color:var(--c-plan-line);color:var(--c-plan);background:var(--c-plan-soft)}
+#transcribeBtn,#saveReview,#editorSave,#editorSync{border-color:var(--c-edit-line);color:var(--c-edit);background:var(--c-edit-soft)}
+#exportBtn,#editorExport,#saveDevNotes{border-color:var(--c-save-line);color:var(--c-save);background:var(--c-save-soft)}
+#clearLocal{border-color:var(--c-record-line);color:var(--c-record);background:var(--c-record-soft)}
+/* Content markers and labels follow the same semantic palette. */
+#stage-planning h2,#stage-planning .label{color:var(--c-plan)}
+#stage-recording h2,#stage-recording .label{color:var(--c-record)}
+#stage-review h2,#stage-review .label,#editor h1,#editor h2{color:var(--c-edit)}
+#stage-library h2,#stage-library .label{color:var(--c-save)}
+#planningTalks .talk.ai{background:var(--c-plan-soft);border-color:var(--c-plan-line)}
+#planningTalks .talk.ai .who{color:var(--c-plan)}
+#takes audio{accent-color:var(--c-record)}
+.badge.good{background:var(--c-save-soft);border-color:var(--c-save-line);color:var(--c-save)}
+.badge.warn{background:#fff3df;border-color:#eed5a9;color:#87571e}
+#healthBadge{border-color:var(--c-edit-line)}
+#memoStatus,#planningStatus,#recordStatus,#reviewStatus,#editorStatus,#devStatus,#copyStatus{overflow-wrap:anywhere}
+@media(prefers-reduced-motion:no-preference){
+  .step,.btn,.tab{transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+}
+
+
 </style>
 </head>
 <body>
