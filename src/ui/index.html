@@ -144,7 +144,7 @@ audio{display:block;max-width:100%}
 
 
 /* Aikata minimal voice-first UI: one task and one next action at a time. */
-.tabs,.steps,.side,#editor,#dev,.footer,.eyebrow,.hero p,.hero>.btn,
+.steps,.side,#editor,.footer,.eyebrow,.hero p,.hero>.btn,
 #stage-memo .lead,#stage-planning .lead,#stage-recording .lead,#stage-review .lead,#stage-library .lead,
 #stage-memo .label,#stage-planning .label,#stage-memo #talks,#stage-memo #message,
 #stage-memo #askBtn,#stage-memo #sendBtn,#stage-memo #outlineBtn,#stage-memo #toPlanning,
@@ -205,7 +205,72 @@ textarea.field{min-height:180px}
 <section id="editor" class="view"><div class="hero"><div><div class="eyebrow">Editorial workspace</div><h1>編集する。並べ替える。残す。</h1><p class="muted">原稿も音声も、未完成の素材として扱う。完成を急がず、後から再編集できる形で保存します。</p></div></div><div class="grid"><section class="panel"><h2>現在の原稿</h2><p class="lead">制作スタジオで書いたメモ・文字起こしを編集できます。</p><label class="label" for="editorMemo">シタガキメモ</label><textarea class="field" id="editorMemo"></textarea><label class="label" for="editorTranscript">文字起こし・編集後の原稿</label><textarea class="field" id="editorTranscript"></textarea><div class="actions" style="margin-top:12px"><button class="btn primary" id="editorSave">変更を保存</button><button class="btn" id="editorSync">スタジオに反映</button></div><div id="editorStatus" class="status"></div></section><section class="panel"><h2>素材と記録</h2><p class="lead">音声やメモは必要なものだけ残します。不要になった記録は削除できます。</p><div id="editorLibrary"></div><div class="actions"><button class="btn" id="editorExport">JSONを書き出す</button><button class="btn" id="clearLocal">このブラウザの記録を全削除</button></div><p class="small muted">全削除はこの端末の保存データにのみ作用し、取り消せません。</p></section></div></section>
 <section id="dev" class="view"><div class="hero"><div><div class="eyebrow">Developer + Editor desk</div><h1>開発も、編集も、同じ作業台で。</h1><p class="muted">課題を見つける → 仮説を立てる → 小さく試す → 結果を確認する → 改善する。</p></div><a class="btn" href="https://github.com/bonsai/Aikata-Podcast" target="_blank" rel="noreferrer">GitHub リポジトリ ↗</a></div>
 <div class="grid"><section class="panel"><h2>システムの現在地</h2><p class="lead">アプリ実装に合わせた開発メモ。秘密情報は表示しません。</p><div class="item"><strong>フロントエンド</strong><span class="badge good">HTML / CSS / JS</span> <span class="badge">src/ui</span></div><div class="item"><strong>APIサーバー</strong><span class="badge">Node HTTP</span> <span class="badge warn">Hono移行は未実施</span></div><div class="item"><strong>LLM</strong><span class="badge">Workers AI SDK</span> <span class="badge">Mastra workflow</span></div><div class="item"><strong>音声</strong><span class="badge">Deepgram SDK</span></div><div class="item"><strong>保存</strong><span class="badge">Browser localStorage</span></div><div class="item"><strong>設定</strong><span class="badge">config/aikata.yaml</span></div><button class="btn" id="healthBtn" style="margin-top:12px">API接続を確認</button><div id="devHealth" class="status"></div></section>
-<section class="panel"><h2>作業カンバン</h2><p class="lead">チェック状態はこのブラウザに保存されます。GitHubのIssueと同期するものではありません。</p><ul class="checklist" id="kanban"><li><label><input type="checkbox" data-task="yaml">YAML設定と秘密情報の分離</label></li><li><label><input type="checkbox" data-task="llm">Workers AI SDKアダプター</label></li><li><label><input type="checkbox" data-task="speech">Deepgram SDKアダプター</label></li><li><label><input type="checkbox" data-task="ui">制作・編集・開発UIの統合</label></li><li><label><input type="checkbox" data-task="hono">Hono APIレイヤーの検討・テスト</label></li><li><label><input type="checkbox" data-task="tests">CI / テスト結果の確認</label></li><li><label><input type="checkbox" data-task="privacy">ブラウザ保存と送信タイミングの確認</label></li></ul></section>
+<section class="panel" id="devKanbanDashboard">
+<style>
+#devKanbanDashboard .dash-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+#devKanbanDashboard .dash-metric{background:var(--soft);border-radius:10px;padding:10px;min-width:0}
+#devKanbanDashboard .dash-metric strong{display:block;font-size:22px}
+#devKanbanDashboard .dash-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+#devKanbanDashboard .dash-toolbar .field{flex:1;min-width:130px}
+#devKanbanDashboard .dash-board{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:8px;overflow-x:auto;padding-bottom:8px}
+#devKanbanDashboard .dash-col{background:#efede6;border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+#devKanbanDashboard .dash-col h3{font-size:12px;margin:2px 0 8px;display:flex;justify-content:space-between}
+#devKanbanDashboard .dash-card{background:white;border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:8px}
+#devKanbanDashboard .dash-card strong{display:block;font-size:12px;line-height:1.4;margin:5px 0}
+#devKanbanDashboard .dash-card p{font-size:11px;color:var(--muted);margin:0}
+#devKanbanDashboard .dash-meta{font-size:10px;color:var(--muted);display:flex;gap:5px;flex-wrap:wrap}
+#devKanbanDashboard .dash-link{font-size:11px;color:var(--blue);font-weight:700}
+#devKanbanDashboard .dash-pri{font-size:10px;font-weight:800}
+#devKanbanDashboard .dash-map{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:12px}
+#devKanbanDashboard .dash-map div{padding:9px 6px;background:#f2f0e9;border:1px solid var(--line);border-radius:8px;font-size:11px;text-align:center}
+#devKanbanDashboard .dash-map small{display:block;color:var(--muted);font-size:10px}
+@media(max-width:600px){#devKanbanDashboard .dash-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#devKanbanDashboard .dash-board{grid-template-columns:repeat(5,78vw)}#devKanbanDashboard .dash-map{grid-template-columns:1fr}#devKanbanDashboard .dash-map div{text-align:left}}
+</style>
+<h2>開発カンバン・ダッシュボード</h2>
+<p class="lead">Issueを作業の正本にし、Painから設計・実装・検証までを追います。表示カードはサンプルです。GitHubとは未接続です。</p>
+<div class="dash-metrics" aria-label="開発状況サマリー">
+ <div class="dash-metric"><small>表示中</small><strong id="dashTotal">8</strong></div>
+ <div class="dash-metric"><small>進行中</small><strong id="dashActive">2</strong></div>
+ <div class="dash-metric"><small>ブロッカー</small><strong id="dashBlocked">1</strong></div>
+ <div class="dash-metric"><small>効果検証待ち</small><strong id="dashVerify">2</strong></div>
+</div>
+<div class="dash-toolbar">
+ <input class="field" id="dashSearch" type="search" placeholder="Issue・課題を検索" aria-label="Issue・課題を検索">
+ <select class="field" id="dashPriority" aria-label="優先度"><option value="">全優先度</option><option>P0</option><option>P1</option><option>P2</option></select>
+ <a class="btn" href="https://github.com/bonsai/Aikata-Podcast/issues">GitHub Issues ↗</a>
+ <a class="btn" href="https://github.com/bonsai/Aikata-Podcast/issues/new/choose">＋ Issue作成</a>
+</div>
+<div class="dash-board" id="dashBoard" aria-label="開発カンバン">
+ <section class="dash-col" data-dash-status="Backlog"><h3>Backlog<span data-dash-count>0</span></h3><div data-dash-cards></div></section><section class="dash-col" data-dash-status="Ready"><h3>Ready<span data-dash-count>0</span></h3><div data-dash-cards></div></section><section class="dash-col" data-dash-status="In Progress"><h3>In Progress<span data-dash-count>0</span></h3><div data-dash-cards></div></section><section class="dash-col" data-dash-status="Review"><h3>Review<span data-dash-count>0</span></h3><div data-dash-cards></div></section><section class="dash-col" data-dash-status="Done"><h3>Done<span data-dash-count>0</span></h3><div data-dash-cards></div></section>
+</div>
+<h3 style="margin-top:14px">Human MAP · 人間向け開発フロー</h3>
+<div class="dash-map">
+ <div><strong>01 · Pain</strong><small>困りごとを聞く</small></div><div><strong>02 · Issue</strong><small>要望・受入条件</small></div><div><strong>03 · YAML</strong><small>テンプレート設計</small></div><div><strong>04 · SVG</strong><small>構成を可視化</small></div><div><strong>05 · Build</strong><small>実装・検証・改善</small></div>
+</div>
+<p class="small muted">ルール：機能要望はまずIssue化。YAMLを設計の正本、SVGを構成図、Human MAPを人間向けの案内にします。Painが解消したかを確認してから完了扱いにします。</p>
+</section>
+<script>
+(()=>{
+ const tasks=[
+ {id:14,title:"開発カンバンを統合",status:"In Progress",priority:"P0",kind:"Feature",summary:"開発状況を人間が一目で把握する。",next:"表示・検索・モバイル動作を確認",blocked:false,verify:false},
+ {id:13,title:"音声エージェントを案内役に",status:"Ready",priority:"P1",kind:"Feature",summary:"声で次の行動を案内する。",next:"受入条件を照合",blocked:false,verify:false},
+ {id:11,title:"開発メモを統合",status:"Ready",priority:"P1",kind:"Pain",summary:"制作を止めず気づきを記録する。",next:"ローカル保存仕様を確認",blocked:false,verify:false},
+ {id:10,title:"セキュリティ要件を整理",status:"In Progress",priority:"P0",kind:"Bug",summary:"認証・音声・APIキーのリスクを明確にする。",next:"脅威モデルをレビュー",blocked:true,verify:false},
+ {id:9,title:"運用コスト見積もり",status:"Review",priority:"P1",kind:"Research",summary:"実測値からMVP費用を見直す。",next:"実測結果を記録",blocked:false,verify:false},
+ {id:8,title:"モバイル導線を整理",status:"Backlog",priority:"P2",kind:"Feature",summary:"作成・管理・設定の入口を整える。",next:"ナビゲーションを確認",blocked:false,verify:false},
+ {id:7,title:"MVP工数を見積もる",status:"Done",priority:"P2",kind:"Research",summary:"工数とエピソード単価を整理。",next:"実測後に再検証",blocked:false,verify:true},
+ {id:5,title:"データモデルを検証",status:"Done",priority:"P2",kind:"Bug",summary:"構造化データの型を明確にする。",next:"入力検証テストを確認",blocked:false,verify:true}
+ ];
+ const root=document.querySelector('#devKanbanDashboard'); if(!root)return;
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function draw(){const q=root.querySelector('#dashSearch').value.trim().toLowerCase(),p=root.querySelector('#dashPriority').value;let shown=0,active=0,blocked=0,verify=0;
+ root.querySelectorAll('[data-dash-status]').forEach(col=>{const status=col.dataset.dashStatus,items=tasks.filter(t=>t.status===status&&(!p||t.priority===p)&&(!q||(t.title+' '+t.summary+' '+t.kind+' #'+t.id).toLowerCase().includes(q)));col.querySelector('[data-dash-count]').textContent=items.length;const box=col.querySelector('[data-dash-cards]');box.innerHTML=items.map(t=>{shown++;if(t.status==='In Progress')active++;if(t.blocked)blocked++;if(t.verify)verify++;return '<article class="dash-card"><div class="dash-meta"><span>#'+t.id+'</span><span class="dash-pri">'+t.priority+'</span><span>'+esc(t.kind)+'</span>'+(t.blocked?'<span style="color:var(--red)">BLOCKED</span>':'')+'</div><strong>'+esc(t.title)+'</strong><p>'+esc(t.summary)+'</p><p style="margin-top:7px">次: '+esc(t.next)+'</p><a class="dash-link" href="https://github.com/bonsai/Aikata-Podcast/issues/'+t.id+'" target="_blank" rel="noopener noreferrer">Issue ↗</a></article>'}).join('')||'<p class="small muted">カードなし</p>'});
+ root.querySelector('#dashTotal').textContent=shown;root.querySelector('#dashActive').textContent=active;root.querySelector('#dashBlocked').textContent=blocked;root.querySelector('#dashVerify').textContent=verify;
+ }
+ root.querySelector('#dashSearch').addEventListener('input',draw);root.querySelector('#dashPriority').addEventListener('change',draw);draw();
+})();
+</script>
+<section class="panel"><h2>既存の作業チェックリスト</h2><p class="lead">チェック状態はこのブラウザに保存されます。GitHubのIssueと同期するものではありません。</p><ul class="checklist" id="kanban"><li><label><input type="checkbox" data-task="yaml">YAML設定と秘密情報の分離</label></li><li><label><input type="checkbox" data-task="llm">Workers AI SDKアダプター</label></li><li><label><input type="checkbox" data-task="speech">Deepgram SDKアダプター</label></li><li><label><input type="checkbox" data-task="ui">制作・編集・開発UIの統合</label></li><li><label><input type="checkbox" data-task="hono">Hono APIレイヤーの検討・テスト</label></li><li><label><input type="checkbox" data-task="tests">CI / テスト結果の確認</label></li><li><label><input type="checkbox" data-task="privacy">ブラウザ保存と送信タイミングの確認</label></li></ul></section>
 <section class="panel"><h2>アーキテクチャメモ</h2><p class="lead">OpenAPI共通化・Hono化は検討中。現在の実装状態と目標を分けて記録します。</p><div class="code">UI: src/ui/index.html
 API: src/server.ts (Node HTTP)
 LLM: src/llm/workers-ai.ts
